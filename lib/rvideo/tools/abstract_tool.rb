@@ -10,12 +10,16 @@ module RVideo # :nodoc:
       def self.assign(cmd, options = {})
         tool_name = File.split(cmd.split(" ").first).last
         begin
-          tool = "RVideo::Tools::#{tool_name.classify}".constantize.send(:new, cmd, options)
+          tool = RVideo::Tools.const_get(tool_name.capitalize).send(:new, cmd, options)
         # rescue NameError, /uninitialized constant/
           # raise TranscoderError::UnknownTool, "The recipe tried to use the '#{tool_name}' tool, which does not exist."
         rescue => e
-          LOGGER.info $!
-          LOGGER.info e.backtrace.join("\n")
+          if Object.const_defined?(:LOGGER)
+            LOGGER.info $!
+            LOGGER.info e.backtrace.join("\n")
+          else
+            puts e
+          end
         end
       end
       
@@ -26,7 +30,7 @@ module RVideo # :nodoc:
         
         def initialize(raw_command, options = {})
           @raw_command = raw_command
-          @options = HashWithIndifferentAccess.new(options)
+          @options = Hash.new(options)
           @command = interpolate_variables(raw_command)
         end
 
