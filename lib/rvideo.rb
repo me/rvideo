@@ -13,7 +13,6 @@ require 'tools/ffmpeg2theora'
 require 'tools/yamdi'
 require 'errors'
 require 'transcoder'
-require 'active_support'
 require 'shellwords'
 
 TEMP_PATH = File.expand_path(File.dirname(__FILE__) + '/../tmp')
