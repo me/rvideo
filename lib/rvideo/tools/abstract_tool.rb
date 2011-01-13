@@ -9,7 +9,6 @@ module RVideo # :nodoc:
       
       def self.assign(cmd, options = {})
         tool_name = File.split(cmd.split(" ").first).last
-        debugger
         begin
           tool = RVideo::Tools.const_get(tool_name.capitalize).send(:new, cmd, options)
         # rescue NameError, /uninitialized constant/
@@ -32,7 +31,7 @@ module RVideo # :nodoc:
         
         def initialize(raw_command, options = {})
           @raw_command = raw_command
-          @options = {}
+          @options = options
           @command = interpolate_variables(raw_command)
         end
 
