@@ -9,6 +9,7 @@ module RVideo # :nodoc:
       
       def self.assign(cmd, options = {})
         tool_name = File.split(cmd.split(" ").first).last
+        debugger
         begin
           tool = RVideo::Tools.const_get(tool_name.capitalize).send(:new, cmd, options)
         # rescue NameError, /uninitialized constant/
@@ -20,6 +21,7 @@ module RVideo # :nodoc:
           else
             puts e
           end
+          nil
         end
       end
       
@@ -31,7 +33,6 @@ module RVideo # :nodoc:
         def initialize(raw_command, options = {})
           @raw_command = raw_command
           @options = {}
-          options.each{ |k, v| @options[k.to_s] = v }
           @command = interpolate_variables(raw_command)
         end
 
@@ -74,8 +75,8 @@ module RVideo # :nodoc:
         # Magic parameters
         #
         def temp_dir
-          if @options['output_file']
-            "#{File.dirname(@options['output_file'])}/"
+          if @options[:output_file]
+            "#{File.dirname(@options[:output_file])}/"
           else
             ""
           end
@@ -88,7 +89,7 @@ module RVideo # :nodoc:
         
         def get_fps
           inspect_original if @original.nil?
-          fps = @options['fps'] || ""
+          fps = @options[:fps] || ""
           case fps
           when "copy"
             get_original_fps
@@ -104,7 +105,7 @@ module RVideo # :nodoc:
         
         def get_resolution
           inspect_original if @original.nil?
-          resolution_setting = @options['resolution'] || ""
+          resolution_setting = @options[:resolution] || ""
           case resolution_setting
           when "copy"
             get_original_resolution
@@ -125,7 +126,7 @@ module RVideo # :nodoc:
         end
 
         def get_audio_channels
-          channels = @options['audio_channels'] || ""
+          channels = @options[:audio_channels] || ""
           case channels
           when "stereo"
             get_stereo_audio
@@ -141,7 +142,7 @@ module RVideo # :nodoc:
         end
         
         def get_audio_bit_rate
-          bit_rate = @options['audio_bit_rate'] || ""
+          bit_rate = @options[:audio_bit_rate] || ""
           case bit_rate
           when ""
             {}
@@ -155,7 +156,7 @@ module RVideo # :nodoc:
         end
         
         def get_audio_sample_rate
-          sample_rate = @options['audio_sample_rate'] || ""
+          sample_rate = @options[:audio_sample_rate] || ""
           case sample_rate
           when ""
             {}
@@ -170,8 +171,8 @@ module RVideo # :nodoc:
         
         def get_video_quality
           inspect_original if @original.nil?
-          quality = @options['video_quality'] || 'medium'
-          video_bit_rate = @options['video_bit_rate'] || nil
+          quality = @options[:video_quality] || 'medium'
+          video_bit_rate = @options[:video_bit_rate] || nil
           h = {:video_quality => quality, :video_bit_rate => video_bit_rate}
           h.merge!(get_fps).merge!(get_resolution)
         end
@@ -179,22 +180,22 @@ module RVideo # :nodoc:
         
         
         def get_fit_to_width_resolution
-          w = @options['width']
+          w = @options[:width]
           raise TranscoderError::ParameterError, "invalid width of '#{w}' for fit to width" unless valid_dimension?(w)
           h = calculate_height(@original.width, @original.height, w)
           {:scale => {:width => w, :height => h}}
         end
         
         def get_fit_to_height_resolution
-          h = @options['height']
+          h = @options[:height]
           raise TranscoderError::ParameterError, "invalid height of '#{h}' for fit to height" unless valid_dimension?(h)
           w = calculate_width(@original.width, @original.height, h)
           {:scale => {:width => w, :height => h}}
         end
         
         def get_letterbox_resolution
-          lw = @options['width'].to_i
-          lh = @options['height'].to_i
+          lw = @options[:width].to_i
+          lh = @options[:height].to_i
           raise TranscoderError::ParameterError, "invalid width of '#{lw}' for letterbox" unless valid_dimension?(lw)
           raise TranscoderError::ParameterError, "invalid height of '#{lh}' for letterbox" unless valid_dimension?(lh)
           w = calculate_width(@original.width, @original.height, lh)
@@ -214,8 +215,8 @@ module RVideo # :nodoc:
         end
 
         def get_specific_resolution
-          w = @options['width']
-          h = @options['height']
+          w = @options[:width]
+          h = @options[:height]
           raise TranscoderError::ParameterError, "invalid width of '#{w}' for specific resolution" unless valid_dimension?(w)
           raise TranscoderError::ParameterError, "invalid height of '#{h}' for specific resolution" unless valid_dimension?(h)
           {:scale => {:width => w, :height => h}}
@@ -227,7 +228,7 @@ module RVideo # :nodoc:
         end
         
         def get_specific_fps
-          {:fps => @options['fps']}
+          {:fps => @options[:fps]}
         end
         
         # def get_video_quality
@@ -247,11 +248,11 @@ module RVideo # :nodoc:
         end
         
         def get_specific_audio_bit_rate
-          {:bit_rate => @options['audio_bit_rate']}
+          {:bit_rate => @options[:audio_bit_rate]}
         end
         
         def get_specific_audio_sample_rate
-          {:sample_rate => @options['audio_sample_rate']}
+          {:sample_rate => @options[:audio_sample_rate]}
         end
         
         def calculate_width(ow, oh, h)
@@ -317,7 +318,7 @@ module RVideo # :nodoc:
         # 
         
         def matched_variable(match)
-          variable_name = match.gsub("$","")
+          variable_name = match.gsub("$","").to_sym
           if self.respond_to? variable_name
             self.send(variable_name)
           elsif @options.key?(variable_name) 
