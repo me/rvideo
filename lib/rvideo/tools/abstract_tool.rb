@@ -30,7 +30,8 @@ module RVideo # :nodoc:
         
         def initialize(raw_command, options = {})
           @raw_command = raw_command
-          @options = Hash.new(options)
+          @options = {}
+          options.each{ |k, v| @options[k.to_s] = v }
           @command = interpolate_variables(raw_command)
         end
 
